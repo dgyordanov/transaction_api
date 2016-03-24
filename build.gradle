@@ -14,18 +14,21 @@ apply plugin: 'spring-boot'
 
 jar {
     baseName = 'transaction-api'
-    version =  '0.1.0'
+    version = '0.1.0'
 }
 
 repositories {
     mavenCentral()
 }
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
+compileJava {
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
+}
 
 dependencies {
     compile("org.springframework.boot:spring-boot-starter-web")
+    compile("org.modelmapper:modelmapper:0.7.5")
     testCompile("junit:junit")
 }
 
