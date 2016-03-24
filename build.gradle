@@ -12,24 +12,22 @@ apply plugin: 'eclipse'
 apply plugin: 'idea'
 apply plugin: 'spring-boot'
 
-jar {
-    baseName = 'transaction-api'
-    version = '0.1.0'
-}
-
 repositories {
     mavenCentral()
-}
-
-compileJava {
-    sourceCompatibility = 1.8
-    targetCompatibility = 1.8
 }
 
 dependencies {
     compile("org.springframework.boot:spring-boot-starter-web")
     compile("org.modelmapper:modelmapper:0.7.5")
     testCompile("junit:junit")
+}
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+jar {
+    baseName = 'transaction-api'
+    version = '0.1.0'
 }
 
 task wrapper(type: Wrapper) {
