@@ -7,31 +7,61 @@ import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
-import java.util.List;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * Transaction service which stores transactions in the memory. It uses a HashMap to store the transactions.
+ * Every Transaction stores its children, so it will be easy to go through the all parent/child
+ * transaction tree recursively.
+ * <p>
+ * The implementation is thread safe.
+ */
 @Service
 public class InMemoryTransactionService implements TransactionService {
 
     private Validator validator;
 
-    private Map<Long, Transaction> transactionStorage = new ConcurrentHashMap<>();
+    // Store transactions as a HashMap in order to achieve a fast access by key - O(1)
+    // As the transactions are in parent/child structure, it doesn't make sense to store them in a tree because
+    // it will not be sorted and either access by key and add an element is with O(n)
+    private Map<Long, Transaction> transactionStorage;
+
+    // Store the transaction ids organised by type in a separate data structure in order to achieve fast read.
+    // The price is that the index should be updated on write.
+    private Map<String, Set<Long>> transactionIdsByTypeIndex;
 
     @Autowired
     public InMemoryTransactionService(Validator validator) {
         this.validator = validator;
+        transactionStorage = new ConcurrentHashMap<>();
+        transactionIdsByTypeIndex = new ConcurrentHashMap<>();
     }
 
     @Override
-    public Transaction getbyId(@NotNull Long transactionId) {
-        return transactionStorage.get(transactionId);
+    public Transaction getById(@NotNull Long transactionId) {
+        if (transactionId == null) {
+            throw new IllegalArgumentException("Transaction id could not be null");
+        }
+
+        Transaction result = transactionStorage.get(transactionId);
+
+        if (result == null) {
+            throw new IllegalArgumentException(String.format("No transaction for id %d found", transactionId));
+        }
+
+        return result;
     }
 
     @Override
-    public List<Long> getTransactionIdsByType(String type) {
-        return null;
+    public Set<Long> getTransactionIdsByType(@NotNull String type) {
+        if (type == null || type.isEmpty()) {
+            throw new IllegalArgumentException("Transaction type could not be null or empty");
+        }
+        return transactionIdsByTypeIndex.get(type);
     }
 
     @Override
@@ -60,6 +90,9 @@ public class InMemoryTransactionService implements TransactionService {
 
         transactionStorage.put(transaction.getId(), transaction);
 
+        transactionIdsByTypeIndex.putIfAbsent(transaction.getType(), Collections.synchronizedSet(new HashSet<>()));
+        transactionIdsByTypeIndex.get(transaction.getType()).add(transaction.getId());
+
         if (transaction.getParentId() != null) {
             Transaction parent = transactionStorage.get(transaction.getParentId());
             parent.getChildren().add(transaction);
@@ -74,9 +107,6 @@ public class InMemoryTransactionService implements TransactionService {
         if (transaction.getParentId() != null && !transactionStorage.containsKey(transaction.getParentId())) {
             throw new ParentNotFoundException(String.format("Invalid parentId: %s", transaction.getParentId()));
         }
-        if (transaction.getAmount().equals(BigDecimal.valueOf(0L))) {
-            throw new IllegalArgumentException("Transaction amount can not be null");
-        }
     }
 
     private void processOldTransaction(@NotNull Transaction transaction) {
@@ -89,6 +119,11 @@ public class InMemoryTransactionService implements TransactionService {
             }
             // Apply the children map to the new transaction
             transaction.setChildren(oldTransaction.getChildren());
+
+            if (!oldTransaction.getType().equals(transaction.getType())) {
+                // Remove the old record from the index only if the type is changed
+                transactionIdsByTypeIndex.get(oldTransaction.getType()).remove(oldTransaction.getId());
+            }
         }
     }
 

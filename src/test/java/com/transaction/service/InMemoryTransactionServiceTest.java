@@ -6,7 +6,7 @@ import org.junit.Test;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 import java.math.BigDecimal;
-import java.util.List;
+import java.util.Collection;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.assertThat;
@@ -27,7 +27,7 @@ public class InMemoryTransactionServiceTest {
         Transaction transaction = new Transaction(234523L, new BigDecimal(23422.55), "test type", null);
         transactionService.createOrUpdate(transaction);
 
-        Transaction storedTransaction = transactionService.getbyId(234523L);
+        Transaction storedTransaction = transactionService.getById(234523L);
         assertThat(storedTransaction, is(equalTo(transaction)));
     }
 
@@ -39,7 +39,7 @@ public class InMemoryTransactionServiceTest {
         Transaction childTransaction = new Transaction(7652321L, new BigDecimal(22.35), "test type", 5187623L);
         transactionService.createOrUpdate(childTransaction);
 
-        Transaction storedParentTransaction = transactionService.getbyId(5187623L);
+        Transaction storedParentTransaction = transactionService.getById(5187623L);
         assertThat(storedParentTransaction.getChildren().size(), is(equalTo(1)));
     }
 
@@ -51,7 +51,7 @@ public class InMemoryTransactionServiceTest {
         Transaction updateTransaction = new Transaction(5187623L, new BigDecimal(198.11), "test type2", null);
         transactionService.createOrUpdate(updateTransaction);
 
-        Transaction storedTransaction = transactionService.getbyId(5187623L);
+        Transaction storedTransaction = transactionService.getById(5187623L);
         assertThat(storedTransaction, is(equalTo(updateTransaction)));
     }
 
@@ -69,8 +69,8 @@ public class InMemoryTransactionServiceTest {
         Transaction updateChildTransaction = new Transaction(5187623L, new BigDecimal(198.11), "test type2", 67621421L);
         transactionService.createOrUpdate(updateChildTransaction);
 
-        Transaction storedParentTransaction1 = transactionService.getbyId(65324523L);
-        Transaction storedParentTransaction2 = transactionService.getbyId(67621421L);
+        Transaction storedParentTransaction1 = transactionService.getById(65324523L);
+        Transaction storedParentTransaction2 = transactionService.getById(67621421L);
 
         assertThat(storedParentTransaction1.getChildren().size(), is(equalTo(0)));
         assertThat(storedParentTransaction2.getChildren().size(), is(equalTo(1)));
@@ -87,7 +87,7 @@ public class InMemoryTransactionServiceTest {
         Transaction updateChildTransaction = new Transaction(2539826L, new BigDecimal(198.11), "test type2", 342512L);
         transactionService.createOrUpdate(updateChildTransaction);
 
-        Transaction storedParentTransaction = transactionService.getbyId(342512L);
+        Transaction storedParentTransaction = transactionService.getById(342512L);
 
         assertThat(storedParentTransaction.getChildren().size(), is(equalTo(1)));
     }
@@ -131,6 +131,8 @@ public class InMemoryTransactionServiceTest {
     public void testCreateWithNegativeAmount() {
         Transaction transaction = new Transaction(568736L, new BigDecimal(-12.43), "test type", null);
         transactionService.createOrUpdate(transaction);
+        Transaction updatedTransaction = transactionService.getById(568736L);
+        assertThat(transaction.getAmount(), is(equalTo(updatedTransaction.getAmount())));
     }
 
     @Test
@@ -192,15 +194,39 @@ public class InMemoryTransactionServiceTest {
         Transaction transaction4 = new Transaction(47256L, new BigDecimal(11.01), "test type2", 5187623L);
         transactionService.createOrUpdate(transaction4);
 
-        List<Long> transactionIds = transactionService.getTransactionIdsByType("test type");
+        Collection<Long> transactionIds = transactionService.getTransactionIdsByType("test type");
         assertThat(transactionIds, hasItem(5187623L));
         assertThat(transactionIds, hasItem(214789L));
         assertThat(transactionIds, not(hasItem(98437L)));
         assertThat(transactionIds, not(hasItem(47256L)));
     }
 
+    @Test
+    public void testIdsByTypeChangeType() {
+        Transaction transaction = new Transaction(5187623L, new BigDecimal(542.32), "test type", null);
+        transactionService.createOrUpdate(transaction);
+
+        Transaction updatedTransaction = new Transaction(5187623L, new BigDecimal(2342), "test type1", null);
+        transactionService.createOrUpdate(updatedTransaction);
+
+        Collection<Long> testTypeIds = transactionService.getTransactionIdsByType("test type");
+        Collection<Long> testType1Ids = transactionService.getTransactionIdsByType("test type1");
+        assertThat(testTypeIds.size(), is(equalTo(0)));
+        assertThat(testType1Ids.size(), is(equalTo(1)));
+    }
+
     @Test(expected = IllegalArgumentException.class)
     public void testIdsByTypeNullType() {
         transactionService.getTransactionIdsByType(null);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testReadByInvalidId() {
+        transactionService.getById(757435L);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testReadByNullId() {
+        transactionService.getById(null);
     }
 }

@@ -10,8 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.math.BigDecimal;
-import java.util.Arrays;
-import java.util.List;
+import java.util.Collection;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
@@ -35,7 +34,7 @@ public class TransactionController {
 
     @RequestMapping(value = "/transaction/{transaction_id}", method = GET, produces = APPLICATION_JSON_VALUE)
     public TransactionDTO read(@PathVariable("transaction_id") Long id) {
-        Transaction transaction = transactionService.getbyId(id);
+        Transaction transaction = transactionService.getById(id);
         TransactionDTO transactionDTO = convertToDto(transaction);
 
         System.out.println(transaction);
@@ -44,7 +43,7 @@ public class TransactionController {
     }
 
     @RequestMapping(value = "types/{type}", method = GET, produces = APPLICATION_JSON_VALUE)
-    private List<Long> getTransactionIdsByType(@PathVariable("type") String type) {
+    private Collection<Long> getTransactionIdsByType(@PathVariable("type") String type) {
         return transactionService.getTransactionIdsByType(type);
     }
 
