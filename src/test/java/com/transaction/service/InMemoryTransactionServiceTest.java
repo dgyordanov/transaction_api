@@ -3,6 +3,8 @@ package com.transaction.service;
 import org.junit.Before;
 import org.junit.Test;
 
+import javax.validation.Validation;
+import javax.validation.ValidatorFactory;
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -16,7 +18,8 @@ public class InMemoryTransactionServiceTest {
     @Before
     public void setup() {
         // Create a new instance of the service in order to start with empty transaction store
-        transactionService = new InMemoryTransactionService();
+        ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
+        transactionService = new InMemoryTransactionService(factory.getValidator());
     }
 
     @Test
@@ -57,56 +60,77 @@ public class InMemoryTransactionServiceTest {
         Transaction parentTransaction1 = new Transaction(65324523L, new BigDecimal(542.32), "test type", null);
         transactionService.createOrUpdate(parentTransaction1);
 
-        Transaction parentTransaction2 = new Transaction(6762113421L, new BigDecimal(542.32), "test type", null);
+        Transaction parentTransaction2 = new Transaction(67621421L, new BigDecimal(542.32), "test type", null);
         transactionService.createOrUpdate(parentTransaction2);
 
         Transaction childTransaction = new Transaction(5187623L, new BigDecimal(198.11), "test type2", 65324523L);
         transactionService.createOrUpdate(childTransaction);
 
-        Transaction updateChildTransaction = new Transaction(5187623L, new BigDecimal(198.11), "test type2", 6762113421L);
-        transactionService.createOrUpdate(childTransaction);
+        Transaction updateChildTransaction = new Transaction(5187623L, new BigDecimal(198.11), "test type2", 67621421L);
+        transactionService.createOrUpdate(updateChildTransaction);
 
         Transaction storedParentTransaction1 = transactionService.getbyId(65324523L);
-        Transaction storedParentTransaction2 = transactionService.getbyId(6762113421L);
+        Transaction storedParentTransaction2 = transactionService.getbyId(67621421L);
 
         assertThat(storedParentTransaction1.getChildren().size(), is(equalTo(0)));
         assertThat(storedParentTransaction2.getChildren().size(), is(equalTo(1)));
     }
 
+    @Test
+    public void testUpdateSameParentTwice() {
+        Transaction parentTransaction = new Transaction(342512L, new BigDecimal(542.32), "test type", null);
+        transactionService.createOrUpdate(parentTransaction);
+
+        Transaction childTransaction = new Transaction(2539826L, new BigDecimal(198.11), "test type2", 342512L);
+        transactionService.createOrUpdate(childTransaction);
+
+        Transaction updateChildTransaction = new Transaction(2539826L, new BigDecimal(198.11), "test type2", 342512L);
+        transactionService.createOrUpdate(updateChildTransaction);
+
+        Transaction storedParentTransaction = transactionService.getbyId(342512L);
+
+        assertThat(storedParentTransaction.getChildren().size(), is(equalTo(1)));
+    }
+
     @Test(expected = ParentNotFoundException.class)
     public void testUnableToCreateWithNotExistingParent() {
-        Transaction childTransaction = new Transaction(2345287L, new BigDecimal(22.35), "test type", 67593458L);
-        transactionService.createOrUpdate(childTransaction);
+        Transaction transaction = new Transaction(2345287L, new BigDecimal(22.35), "test type", 67593458L);
+        transactionService.createOrUpdate(transaction);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testUnableToCreateWithoutId() {
-        Transaction childTransaction = new Transaction(null, new BigDecimal(22.35), "test type", null);
-        transactionService.createOrUpdate(childTransaction);
+        Transaction transaction = new Transaction(null, new BigDecimal(22.35), "test type", null);
+        transactionService.createOrUpdate(transaction);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testUnableToCreateWithoutAmount() {
-        Transaction childTransaction = new Transaction(568736L, null, "test type", null);
-        transactionService.createOrUpdate(childTransaction);
+        Transaction transaction = new Transaction(568736L, null, "test type", null);
+        transactionService.createOrUpdate(transaction);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testUnableToCreateWithoutType() {
-        Transaction childTransaction = new Transaction(568736L, new BigDecimal(22.35), null, null);
-        transactionService.createOrUpdate(childTransaction);
+        Transaction transaction = new Transaction(568736L, new BigDecimal(22.35), null, null);
+        transactionService.createOrUpdate(transaction);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testUnableToCreateWithZeroAmount() {
-        Transaction childTransaction = new Transaction(568736L, new BigDecimal(0), null, null);
-        transactionService.createOrUpdate(childTransaction);
+        Transaction transaction = new Transaction(568736L, new BigDecimal(0), null, null);
+        transactionService.createOrUpdate(transaction);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testUnableToCreateWithNull() {
+        transactionService.createOrUpdate(null);
     }
 
     @Test
     public void testCreateWithNegativeAmount() {
-        Transaction childTransaction = new Transaction(568736L, new BigDecimal(-12.43), "test type", null);
-        transactionService.createOrUpdate(childTransaction);
+        Transaction transaction = new Transaction(568736L, new BigDecimal(-12.43), "test type", null);
+        transactionService.createOrUpdate(transaction);
     }
 
     @Test

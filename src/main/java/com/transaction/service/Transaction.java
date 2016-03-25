@@ -4,8 +4,9 @@ import org.hibernate.validator.constraints.NotEmpty;
 
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 public class Transaction {
 
@@ -20,10 +21,10 @@ public class Transaction {
 
     private Long parentId;
 
-    private List<Transaction> children;
+    private Set<Transaction> children;
 
     public Transaction() {
-        children = new LinkedList<>();
+        children = Collections.synchronizedSet(new HashSet<>());
     }
 
     public Transaction(Long id, BigDecimal amount, String type, Long parentId) {
@@ -31,7 +32,7 @@ public class Transaction {
         this.amount = amount;
         this.type = type;
         this.parentId = parentId;
-        children = new LinkedList<>();
+        children = Collections.synchronizedSet(new HashSet<>());
     }
 
     public Long getId() {
@@ -66,11 +67,11 @@ public class Transaction {
         this.parentId = parentId;
     }
 
-    public List<Transaction> getChildren() {
+    public Set<Transaction> getChildren() {
         return children;
     }
 
-    public void setChildren(List<Transaction> children) {
+    public void setChildren(Set<Transaction> children) {
         this.children = children;
     }
 
@@ -91,18 +92,19 @@ public class Transaction {
 
         Transaction that = (Transaction) o;
 
-        if (!id.equals(that.id)) return false;
-        if (!amount.equals(that.amount)) return false;
-        if (!type.equals(that.type)) return false;
-        return parentId != null ? parentId.equals(that.parentId) : that.parentId == null;
+        if (id != null ? !id.equals(that.id) : that.id != null) return false;
+        if (amount != null ? !amount.equals(that.amount) : that.amount != null) return false;
+        if (type != null ? !type.equals(that.type) : that.type != null) return false;
+        if (parentId != null ? !parentId.equals(that.parentId) : that.parentId != null) return false;
+        return children.equals(that.children);
 
     }
 
     @Override
     public int hashCode() {
-        int result = id.hashCode();
-        result = 31 * result + amount.hashCode();
-        result = 31 * result + type.hashCode();
+        int result = (id != null ? id.hashCode() : 0);
+        result = 31 * result + (amount != null ? amount.hashCode() : 0);
+        result = 31 * result + (type != null ? type.hashCode() : 0);
         result = 31 * result + (parentId != null ? parentId.hashCode() : 0);
         return result;
     }
