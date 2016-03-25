@@ -1,5 +1,8 @@
 package com.transaction.service;
 
+import org.hibernate.validator.constraints.NotEmpty;
+
+import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 
 public class Transaction {
@@ -8,6 +11,7 @@ public class Transaction {
 
     private BigDecimal amount;
 
+    @NotEmpty
     private String type;
 
     private Long parentId;
