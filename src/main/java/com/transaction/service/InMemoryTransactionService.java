@@ -35,8 +35,22 @@ public class InMemoryTransactionService implements TransactionService {
     }
 
     @Override
-    public BigDecimal calculateTransactionsSum(Long transactionId) {
-        return null;
+    public BigDecimal calculateTransactionsSum(@NotNull Long transactionId) {
+        if (transactionId == null) {
+            throw new IllegalArgumentException("Transaciton Id is null");
+        }
+
+        Transaction transaction = transactionStorage.get(transactionId);
+        if (transaction == null) {
+            throw new IllegalArgumentException(String.format("Transaction for id %d not found", transactionId));
+        }
+
+        // Recursive invokation for all children
+        BigDecimal childrenSum = transaction.getChildren().stream()
+                .map(childTransaction -> calculateTransactionsSum(childTransaction.getId()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        return transaction.getAmount().add(childrenSum);
     }
 
     @Override

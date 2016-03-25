@@ -159,24 +159,17 @@ public class InMemoryTransactionServiceTest {
                         .add(childTransaction4.getAmount()))));
     }
 
+    @Test
+    public void testSumWithoutChildren() {
+        Transaction transaction = new Transaction(76564325L, new BigDecimal(41.21), "test type", null);
+        transactionService.createOrUpdate(transaction);
+
+        BigDecimal sum = transactionService.calculateTransactionsSum(76564325L);
+        assertThat(sum, is(equalTo(transaction.getAmount())));
+    }
 
     @Test(expected = IllegalArgumentException.class)
     public void testSumOfTransactionsInvalidId() {
-        Transaction parentTransaction = new Transaction(5187623L, new BigDecimal(542.32), "test type", null);
-        transactionService.createOrUpdate(parentTransaction);
-
-        Transaction childTransaction1 = new Transaction(98437L, new BigDecimal(2342), "test type1", 5187623L);
-        transactionService.createOrUpdate(childTransaction1);
-
-        Transaction childTransaction2 = new Transaction(214789L, new BigDecimal(23512.34), "test type", 5187623L);
-        transactionService.createOrUpdate(childTransaction2);
-
-        Transaction childTransaction3 = new Transaction(47256L, new BigDecimal(11.01), "test type2", 5187623L);
-        transactionService.createOrUpdate(childTransaction3);
-
-        Transaction childTransaction4 = new Transaction(76564325L, new BigDecimal(41.21), "test type", 47256L);
-        transactionService.createOrUpdate(childTransaction4);
-
         transactionService.calculateTransactionsSum(4327623L);
     }
 
