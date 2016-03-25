@@ -19,6 +19,7 @@ dependencies {
     compile("org.springframework.boot:spring-boot-starter-web")
     compile("org.modelmapper:modelmapper:0.7.5")
     testCompile("junit:junit")
+    testCompile("org.springframework:spring-test:4.2.5.RELEASE")
 }
 
 sourceCompatibility = 1.8
