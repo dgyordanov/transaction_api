@@ -9,7 +9,7 @@ import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
 
 @Configuration
-public class RestConfig {
+public class Config {
 
     @Bean
     public ModelMapper modelMapper() {
