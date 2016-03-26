@@ -135,6 +135,12 @@ public class InMemoryTransactionServiceTest {
         assertThat(transaction.getAmount(), is(equalTo(updatedTransaction.getAmount())));
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void testCreateWithInvalidAmount() {
+        Transaction transaction = new Transaction(568736L, new BigDecimal(2134.241), "test type", null);
+        transactionService.createOrUpdate(transaction);
+    }
+
     @Test
     public void testSumOfTransactions() {
         Transaction parentTransaction = new Transaction(5187623L, new BigDecimal(542.32), "test type", null);
