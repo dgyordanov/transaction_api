@@ -33,3 +33,30 @@ Regarding the request which lists all the transactions IDs which are from a part
 * No security is implemented
 * Transaction amount could be also negative but not 0
 * HTTP PUT method is used for create and update and POST handler is not implemented
+
+# REST endpoints
+__PUT /transactionservice/transaction/$transaction_id__
+
+Body
+{ "amount":double,"type":string,"parent_id":long }
+
+where:
+*transaction_id* is a long specifying a new transaction
+*amount* is a double specifying the amount
+*type* is a string specifying a type of the transaction
+*parent_id* is an optional long that may specify the parent transaction of this transaction
+
+__GET /transactionservice/transaction/$transaction_id__
+Returns:
+{ "amount":double,"type":string,"parent_id":long }
+
+__GET /transactionservice/types/$type__
+Returns:
+[ long, long, .... ]
+A json list of all transaction ids that share the same type $type.
+
+__GET /transactionservice/sum/$transaction_id__
+
+Returns
+{ "sum", double }
+A sum of all transactions that are transitively linked by their parent_id to $transaction_id.
