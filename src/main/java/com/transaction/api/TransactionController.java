@@ -1,7 +1,7 @@
 package com.transaction.api;
 
 import com.transaction.service.ParentNotFoundException;
-import com.transaction.service.Transaction;
+import com.transaction.storage.Transaction;
 import com.transaction.service.TransactionService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;

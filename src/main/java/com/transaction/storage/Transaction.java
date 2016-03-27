@@ -1,4 +1,4 @@
-package com.transaction.service;
+package com.transaction.storage;
 
 import org.hibernate.validator.constraints.NotEmpty;
 

@@ -1,5 +1,8 @@
 package com.transaction.service;
 
+import com.transaction.storage.InMemoryTransactionIdsByTypeIndex;
+import com.transaction.storage.InMemoryTransactionRepository;
+import com.transaction.storage.Transaction;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -11,7 +14,7 @@ import java.util.Collection;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.assertThat;
 
-public class InMemoryTransactionServiceTest {
+public class TransactionServiceImplTest {
 
     private TransactionService transactionService;
 
@@ -19,7 +22,8 @@ public class InMemoryTransactionServiceTest {
     public void setup() {
         // Create a new instance of the service in order to start with empty transaction store
         ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
-        transactionService = new InMemoryTransactionService(factory.getValidator());
+        transactionService = new TransactionServiceImpl(factory.getValidator(), new InMemoryTransactionRepository(),
+                new InMemoryTransactionIdsByTypeIndex());
     }
 
     @Test

@@ -3,7 +3,7 @@ package com.transaction.api;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.transaction.TransactionServer;
-import com.transaction.service.Transaction;
+import com.transaction.storage.Transaction;
 import com.transaction.service.TransactionService;
 import org.junit.Test;
 import org.junit.runner.RunWith;

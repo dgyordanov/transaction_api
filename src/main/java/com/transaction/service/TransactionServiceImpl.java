@@ -1,5 +1,8 @@
 package com.transaction.service;
 
+import com.transaction.storage.Transaction;
+import com.transaction.storage.TransactionIdsByTypeIndex;
+import com.transaction.storage.TransactionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -8,10 +11,7 @@ import javax.validation.Validator;
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.util.Collections;
-import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Transaction service which stores transactions in the memory. It uses a HashMap to store the transactions.
@@ -24,24 +24,20 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author Diyan Yordanov
  */
 @Service
-public class InMemoryTransactionService implements TransactionService {
+public class TransactionServiceImpl implements TransactionService {
 
     private Validator validator;
 
-    // Store transactions as a HashMap in order to achieve a fast access by key - O(1)
-    // As the transactions are in parent/child structure, it doesn't make sense to store them in a tree because
-    // it will not be sorted and either access by key and add an element is with O(n)
-    private Map<Long, Transaction> transactionStorage;
+    private TransactionRepository transactionRepository;
 
-    // Store the transaction ids organised by type in a separate data structure in order to achieve fast read.
-    // The price is that the index should be updated on write.
-    private Map<String, Set<Long>> transactionIdsByTypeIndex;
+    private TransactionIdsByTypeIndex transactionIdsByTypeIndex;
 
     @Autowired
-    public InMemoryTransactionService(Validator validator) {
+    public TransactionServiceImpl(Validator validator, TransactionRepository transactionRepository,
+                                  TransactionIdsByTypeIndex transactionIdsByTypeIndex) {
         this.validator = validator;
-        transactionStorage = new ConcurrentHashMap<>();
-        transactionIdsByTypeIndex = new ConcurrentHashMap<>();
+        this.transactionRepository = transactionRepository;
+        this.transactionIdsByTypeIndex = transactionIdsByTypeIndex;
     }
 
     @Override
@@ -50,7 +46,7 @@ public class InMemoryTransactionService implements TransactionService {
             throw new IllegalArgumentException("Transaction id could not be null");
         }
 
-        Transaction result = transactionStorage.get(transactionId);
+        Transaction result = transactionRepository.read(transactionId);
 
         if (result == null) {
             throw new IllegalArgumentException(String.format("No transaction for id %d found", transactionId));
@@ -64,7 +60,7 @@ public class InMemoryTransactionService implements TransactionService {
         if (type == null || type.isEmpty()) {
             throw new IllegalArgumentException("Transaction type could not be null or empty");
         }
-        Set<Long> result = transactionIdsByTypeIndex.get(type);
+        Set<Long> result = transactionIdsByTypeIndex.getIds(type);
         return result != null ? result : Collections.EMPTY_SET;
     }
 
@@ -74,7 +70,7 @@ public class InMemoryTransactionService implements TransactionService {
             throw new IllegalArgumentException("Transaction Id is null");
         }
 
-        Transaction transaction = transactionStorage.get(transactionId);
+        Transaction transaction = transactionRepository.read(transactionId);
         if (transaction == null) {
             throw new IllegalArgumentException(String.format("Transaction for id %d not found", transactionId));
         }
@@ -92,13 +88,11 @@ public class InMemoryTransactionService implements TransactionService {
         validateCreateUpdateInput(transaction);
         processOldTransaction(transaction);
 
-        transactionStorage.put(transaction.getId(), transaction);
-
-        transactionIdsByTypeIndex.putIfAbsent(transaction.getType(), Collections.synchronizedSet(new HashSet<>()));
-        transactionIdsByTypeIndex.get(transaction.getType()).add(transaction.getId());
+        transactionRepository.save(transaction);
+        transactionIdsByTypeIndex.save(transaction);
 
         if (transaction.getParentId() != null) {
-            Transaction parent = transactionStorage.get(transaction.getParentId());
+            Transaction parent = transactionRepository.read(transaction.getParentId());
             parent.getChildren().add(transaction);
         }
     }
@@ -111,7 +105,7 @@ public class InMemoryTransactionService implements TransactionService {
                             .map(error -> String.format("'%s' %s", error.getPropertyPath().toString(), error.getMessage()))
                             .reduce("", (s1, s2) -> s1 + s2 + ";")));
         }
-        if (transaction.getParentId() != null && !transactionStorage.containsKey(transaction.getParentId())) {
+        if (transaction.getParentId() != null && transactionRepository.read(transaction.getParentId()) == null) {
             throw new ParentNotFoundException(String.format("Invalid parent id: %s", transaction.getParentId()));
         }
         if (transaction.getId().equals(transaction.getParentId())) {
@@ -124,11 +118,11 @@ public class InMemoryTransactionService implements TransactionService {
     }
 
     private void processOldTransaction(@NotNull Transaction transaction) {
-        Transaction oldTransaction = transactionStorage.get(transaction.getId());
+        Transaction oldTransaction = transactionRepository.read(transaction.getId());
         if (oldTransaction != null) {
             if (oldTransaction.getParentId() != null) {
-                // If the old transaction has a parent, remove it from its children
-                Transaction oldTransactionPartent = transactionStorage.get(oldTransaction.getParentId());
+                // If the old transaction has a parent, removeId it from its children
+                Transaction oldTransactionPartent = transactionRepository.read(oldTransaction.getParentId());
                 oldTransactionPartent.getChildren().remove(oldTransaction);
             }
             // Apply the children map to the new transaction
@@ -136,9 +130,10 @@ public class InMemoryTransactionService implements TransactionService {
 
             if (!oldTransaction.getType().equals(transaction.getType())) {
                 // Remove the old record from the index only if the type is changed
-                transactionIdsByTypeIndex.get(oldTransaction.getType()).remove(oldTransaction.getId());
+                transactionIdsByTypeIndex.removeId(oldTransaction);
             }
         }
+
     }
 
 }

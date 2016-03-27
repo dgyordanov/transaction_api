@@ -1,10 +1,12 @@
 package com.transaction.service;
 
+import com.transaction.storage.Transaction;
+
 import java.math.BigDecimal;
 import java.util.Collection;
 
 /**
- * Service which stores and manages transactions
+ * Service which manages transactions
  *
  * @author Diyan Yordanov
  */
