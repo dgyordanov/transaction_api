@@ -18,7 +18,7 @@ Run with gradle wrapper:
 
 ## Data storage
 Transactions are stored in the memory and everything is lost when the process is stopped.
-Transactions are in a parent-child relation, so the most natural data structure seems to be a tree. The problem is that there is no order in such a tree. It means that finding a transaction will have O(n). A HashMap was choosen for a data structure where the transactions are stored. Every transaction keeps reference to all its children, so all the children can be found easily in a recursive manner.
+Transactions are in a parent-child relation, so the most natural data structure seems to be a tree. The problem is that there is no order in such a tree. It means that finding a transaction will have O(n). A HashMap was chosen for a data structure where the transactions are stored. Every transaction keeps reference to all its children, so all the children can be found easily in a recursive manner.
 
 Why a HashMap with key ID and value transaction is chosen as a data structure:
 
@@ -27,4 +27,9 @@ Why a HashMap with key ID and value transaction is chosen as a data structure:
 | HashMap | O(1)            | O(1)       | O(1)              |
 | Tree    | O(n)            |  O(n)      | O(n)              |
 
-Regarding the request which lists all the transactions IDs which are from a particular type, a new HashMap is used as an index. It has the type as a key and list of IDs as a value. Without this HashMap, we need to go through the all transactions in order to find the result - O(n). With the HashMap, we read the list fo ids by key O(1). The price is that we need to edit the HashMap on create/edit which brings complexity and some additional lag.
+Regarding the request which lists all the transactions IDs which are from a particular type, a new HashMap is used as an index. It has the type as a key and list of IDs as a value. Without this HashMap, we need to go through the all transactions in order to find the result - O(n). With the HashMap, we read the list of ids by key O(1). The price is that we need to edit the HashMap on create/edit which brings complexity and some additional lag.
+
+## Notes
+* No security is implemented
+* Transaction amount could be also negative but not 0
+* HTTP PUT method is used for create and update and POST handler is not implemented
