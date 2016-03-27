@@ -5,6 +5,8 @@ import java.util.Collection;
 
 /**
  * Service which stores and manages transactions
+ *
+ * @author Diyan Yordanov
  */
 public interface TransactionService {
 

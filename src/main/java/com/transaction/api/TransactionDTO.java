@@ -4,6 +4,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.math.BigDecimal;
 
+/**
+ * Transaction DTO which represents a transaction in the REST service layer.
+ * <p>
+ *
+ * @author Diyan Yordanov
+ */
 public class TransactionDTO {
 
     private BigDecimal amount;

@@ -19,6 +19,14 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.bind.annotation.RequestMethod.PUT;
 
+/**
+ * Rest controller which exposes transactionservice endpoints.
+ * It is a thin rest controller which only wrap the service itself and add some exception handling
+ * in order to be return meaningful responses and correct response codes.
+ * <p>
+ *
+ * @author Diyan Yordanov
+ */
 @RestController
 @RequestMapping("/transactionservice")
 public class TransactionController {
@@ -46,11 +54,7 @@ public class TransactionController {
     @RequestMapping(value = "/transaction/{transaction_id}", method = GET, produces = APPLICATION_JSON_VALUE)
     public TransactionDTO read(@PathVariable("transaction_id") Long id) {
         Transaction transaction = transactionService.getById(id);
-        TransactionDTO transactionDTO = convertToDto(transaction);
-
-        System.out.println(transaction);
-
-        return transactionDTO;
+        return convertToDto(transaction);
     }
 
     @RequestMapping(value = "types/{type}", method = GET, produces = APPLICATION_JSON_VALUE)
@@ -59,9 +63,12 @@ public class TransactionController {
     }
 
     @RequestMapping(value = "sum/{transaction_id}", method = GET, produces = APPLICATION_JSON_VALUE)
-    private TransactionsSumDTO getTransactionsSum(@PathVariable("transaction_id") Long id) {
+    private HashMap<String, BigDecimal> getTransactionsSum(@PathVariable("transaction_id") Long id) {
         BigDecimal sum = transactionService.calculateTransactionsSum(id);
-        return new TransactionsSumDTO(sum);
+        HashMap<String, BigDecimal> responseBody = new HashMap<>();
+        responseBody.put("sum", sum);
+
+        return responseBody;
     }
 
     @ExceptionHandler({IllegalArgumentException.class, ParentNotFoundException.class})

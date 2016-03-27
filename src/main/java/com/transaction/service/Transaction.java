@@ -8,6 +8,11 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * Java bean which represents a transaction in the domain logic
+ *
+ * @author Diyan Yordanov
+ */
 public class Transaction {
 
     @NotNull

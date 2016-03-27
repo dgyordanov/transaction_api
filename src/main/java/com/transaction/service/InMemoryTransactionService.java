@@ -19,6 +19,9 @@ import java.util.concurrent.ConcurrentHashMap;
  * transaction tree recursively.
  * <p>
  * The implementation is thread safe.
+ * <p>
+ *
+ * @author Diyan Yordanov
  */
 @Service
 public class InMemoryTransactionService implements TransactionService {
