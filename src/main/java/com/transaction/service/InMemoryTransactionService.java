@@ -61,7 +61,8 @@ public class InMemoryTransactionService implements TransactionService {
         if (type == null || type.isEmpty()) {
             throw new IllegalArgumentException("Transaction type could not be null or empty");
         }
-        return transactionIdsByTypeIndex.get(type);
+        Set<Long> result = transactionIdsByTypeIndex.get(type);
+        return result != null ? result : Collections.EMPTY_SET;
     }
 
     @Override
@@ -75,7 +76,7 @@ public class InMemoryTransactionService implements TransactionService {
             throw new IllegalArgumentException(String.format("Transaction for id %d not found", transactionId));
         }
 
-        // Recursive invokation for all children
+        // Recursive invocation for all children
         BigDecimal childrenSum = transaction.getChildren().stream()
                 .map(childTransaction -> calculateTransactionsSum(childTransaction.getId()))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);

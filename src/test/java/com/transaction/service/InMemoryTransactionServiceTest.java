@@ -247,6 +247,12 @@ public class InMemoryTransactionServiceTest {
         transactionService.getTransactionIdsByType(null);
     }
 
+    @Test
+    public void testIdsByTypeNotExistingType() {
+        Collection<Long> testTypeIds = transactionService.getTransactionIdsByType("not existing one");
+        assertThat(testTypeIds.size(), is(equalTo(0)));
+    }
+
     @Test(expected = IllegalArgumentException.class)
     public void testReadByInvalidId() {
         transactionService.getById(757435L);
