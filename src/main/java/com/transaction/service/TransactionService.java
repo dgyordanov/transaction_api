@@ -4,7 +4,7 @@ import java.math.BigDecimal;
 import java.util.Collection;
 
 /**
- * Service which stores and manages transactions and operations with them
+ * Service which stores and manages transactions
  */
 public interface TransactionService {
 
