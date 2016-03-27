@@ -24,7 +24,7 @@ public class InMemoryTransactionServiceTest {
 
     @Test
     public void testCreateWithoutParent() {
-        Transaction transaction = new Transaction(234523L, new BigDecimal(23422.55), "test type", null);
+        Transaction transaction = new Transaction(234523L, new BigDecimal("23422.55"), "test type", null);
         transactionService.createOrUpdate(transaction);
 
         Transaction storedTransaction = transactionService.getById(234523L);
@@ -33,10 +33,10 @@ public class InMemoryTransactionServiceTest {
 
     @Test
     public void testCreateWithParent() {
-        Transaction parentTransaction = new Transaction(5187623L, new BigDecimal(542.32), "test type", null);
+        Transaction parentTransaction = new Transaction(5187623L, new BigDecimal("542.32"), "test type", null);
         transactionService.createOrUpdate(parentTransaction);
 
-        Transaction childTransaction = new Transaction(7652321L, new BigDecimal(22.35), "test type", 5187623L);
+        Transaction childTransaction = new Transaction(7652321L, new BigDecimal("22.35"), "test type", 5187623L);
         transactionService.createOrUpdate(childTransaction);
 
         Transaction storedParentTransaction = transactionService.getById(5187623L);
@@ -45,10 +45,10 @@ public class InMemoryTransactionServiceTest {
 
     @Test
     public void testUpdate() {
-        Transaction transaction = new Transaction(5187623L, new BigDecimal(542.32), "test type", null);
+        Transaction transaction = new Transaction(5187623L, new BigDecimal("542.32"), "test type", null);
         transactionService.createOrUpdate(transaction);
 
-        Transaction updateTransaction = new Transaction(5187623L, new BigDecimal(198.11), "test type2", null);
+        Transaction updateTransaction = new Transaction(5187623L, new BigDecimal("198.11"), "test type2", null);
         transactionService.createOrUpdate(updateTransaction);
 
         Transaction storedTransaction = transactionService.getById(5187623L);
@@ -57,16 +57,16 @@ public class InMemoryTransactionServiceTest {
 
     @Test
     public void testUpdateParent() {
-        Transaction parentTransaction1 = new Transaction(65324523L, new BigDecimal(542.32), "test type", null);
+        Transaction parentTransaction1 = new Transaction(65324523L, new BigDecimal("542.32"), "test type", null);
         transactionService.createOrUpdate(parentTransaction1);
 
-        Transaction parentTransaction2 = new Transaction(67621421L, new BigDecimal(542.32), "test type", null);
+        Transaction parentTransaction2 = new Transaction(67621421L, new BigDecimal("542.32"), "test type", null);
         transactionService.createOrUpdate(parentTransaction2);
 
-        Transaction childTransaction = new Transaction(5187623L, new BigDecimal(198.11), "test type2", 65324523L);
+        Transaction childTransaction = new Transaction(5187623L, new BigDecimal("198.11"), "test type2", 65324523L);
         transactionService.createOrUpdate(childTransaction);
 
-        Transaction updateChildTransaction = new Transaction(5187623L, new BigDecimal(198.11), "test type2", 67621421L);
+        Transaction updateChildTransaction = new Transaction(5187623L, new BigDecimal("198.11"), "test type2", 67621421L);
         transactionService.createOrUpdate(updateChildTransaction);
 
         Transaction storedParentTransaction1 = transactionService.getById(65324523L);
@@ -78,13 +78,13 @@ public class InMemoryTransactionServiceTest {
 
     @Test
     public void testUpdateSameParentTwice() {
-        Transaction parentTransaction = new Transaction(342512L, new BigDecimal(542.32), "test type", null);
+        Transaction parentTransaction = new Transaction(342512L, new BigDecimal("542.32"), "test type", null);
         transactionService.createOrUpdate(parentTransaction);
 
-        Transaction childTransaction = new Transaction(2539826L, new BigDecimal(198.11), "test type2", 342512L);
+        Transaction childTransaction = new Transaction(2539826L, new BigDecimal("198.11"), "test type2", 342512L);
         transactionService.createOrUpdate(childTransaction);
 
-        Transaction updateChildTransaction = new Transaction(2539826L, new BigDecimal(198.11), "test type2", 342512L);
+        Transaction updateChildTransaction = new Transaction(2539826L, new BigDecimal("198.11"), "test type2", 342512L);
         transactionService.createOrUpdate(updateChildTransaction);
 
         Transaction storedParentTransaction = transactionService.getById(342512L);
@@ -94,22 +94,22 @@ public class InMemoryTransactionServiceTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testUnableToPointSelfAsParent() {
-        Transaction parentTransaction = new Transaction(23768L, new BigDecimal(542.32), "test type", null);
+        Transaction parentTransaction = new Transaction(23768L, new BigDecimal("542.32"), "test type", null);
         transactionService.createOrUpdate(parentTransaction);
 
-        Transaction childTransaction = new Transaction(23768L, new BigDecimal(198.11), "test type2", 23768L);
+        Transaction childTransaction = new Transaction(23768L, new BigDecimal("198.11"), "test type2", 23768L);
         transactionService.createOrUpdate(childTransaction);
     }
 
     @Test(expected = ParentNotFoundException.class)
     public void testUnableToCreateWithNotExistingParent() {
-        Transaction transaction = new Transaction(2345287L, new BigDecimal(22.35), "test type", 67593458L);
+        Transaction transaction = new Transaction(2345287L, new BigDecimal("22.35"), "test type", 67593458L);
         transactionService.createOrUpdate(transaction);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testUnableToCreateWithoutId() {
-        Transaction transaction = new Transaction(null, new BigDecimal(22.35), "test type", null);
+        Transaction transaction = new Transaction(null, new BigDecimal("22.35"), "test type", null);
         transactionService.createOrUpdate(transaction);
     }
 
@@ -121,7 +121,7 @@ public class InMemoryTransactionServiceTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testUnableToCreateWithoutType() {
-        Transaction transaction = new Transaction(568736L, new BigDecimal(22.35), null, null);
+        Transaction transaction = new Transaction(568736L, new BigDecimal("22.35"), null, null);
         transactionService.createOrUpdate(transaction);
     }
 
@@ -138,33 +138,45 @@ public class InMemoryTransactionServiceTest {
 
     @Test
     public void testCreateWithNegativeAmount() {
-        Transaction transaction = new Transaction(568736L, new BigDecimal(-12.43), "test type", null);
+        Transaction transaction = new Transaction(568736L, new BigDecimal("-12.43"), "test type", null);
         transactionService.createOrUpdate(transaction);
         Transaction updatedTransaction = transactionService.getById(568736L);
         assertThat(transaction.getAmount(), is(equalTo(updatedTransaction.getAmount())));
     }
 
     @Test(expected = IllegalArgumentException.class)
+    public void testCreateWithNegativeAmountInvalidScale() {
+        Transaction transaction = new Transaction(568736L, new BigDecimal("-12.437"), "test type", null);
+        transactionService.createOrUpdate(transaction);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testCreateWithPositiveAmountInvalidScale() {
+        Transaction transaction = new Transaction(568736L, new BigDecimal("13.728"), "test type", null);
+        transactionService.createOrUpdate(transaction);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
     public void testCreateWithInvalidAmount() {
-        Transaction transaction = new Transaction(568736L, new BigDecimal(2134.241), "test type", null);
+        Transaction transaction = new Transaction(568736L, new BigDecimal("2134.241"), "test type", null);
         transactionService.createOrUpdate(transaction);
     }
 
     @Test
     public void testSumOfTransactions() {
-        Transaction parentTransaction = new Transaction(5187623L, new BigDecimal(542.32), "test type", null);
+        Transaction parentTransaction = new Transaction(5187623L, new BigDecimal("542.32"), "test type", null);
         transactionService.createOrUpdate(parentTransaction);
 
         Transaction childTransaction1 = new Transaction(98437L, new BigDecimal(2342), "test type1", 5187623L);
         transactionService.createOrUpdate(childTransaction1);
 
-        Transaction childTransaction2 = new Transaction(214789L, new BigDecimal(23512.34), "test type", 5187623L);
+        Transaction childTransaction2 = new Transaction(214789L, new BigDecimal("23512.34"), "test type", 5187623L);
         transactionService.createOrUpdate(childTransaction2);
 
-        Transaction childTransaction3 = new Transaction(47256L, new BigDecimal(11.01), "test type2", 5187623L);
+        Transaction childTransaction3 = new Transaction(47256L, new BigDecimal("11.01"), "test type2", 5187623L);
         transactionService.createOrUpdate(childTransaction3);
 
-        Transaction childTransaction4 = new Transaction(76564325L, new BigDecimal(41.21), "test type", 47256L);
+        Transaction childTransaction4 = new Transaction(76564325L, new BigDecimal("41.21"), "test type", 47256L);
         transactionService.createOrUpdate(childTransaction4);
 
         BigDecimal sum = transactionService.calculateTransactionsSum(5187623L);
@@ -178,7 +190,7 @@ public class InMemoryTransactionServiceTest {
 
     @Test
     public void testSumWithoutChildren() {
-        Transaction transaction = new Transaction(76564325L, new BigDecimal(41.21), "test type", null);
+        Transaction transaction = new Transaction(76564325L, new BigDecimal("41.21"), "test type", null);
         transactionService.createOrUpdate(transaction);
 
         BigDecimal sum = transactionService.calculateTransactionsSum(76564325L);
@@ -197,16 +209,16 @@ public class InMemoryTransactionServiceTest {
 
     @Test
     public void testIdsByType() {
-        Transaction transaction1 = new Transaction(5187623L, new BigDecimal(542.32), "test type", null);
+        Transaction transaction1 = new Transaction(5187623L, new BigDecimal("542.32"), "test type", null);
         transactionService.createOrUpdate(transaction1);
 
         Transaction transaction2 = new Transaction(98437L, new BigDecimal(2342), "test type1", 5187623L);
         transactionService.createOrUpdate(transaction2);
 
-        Transaction transaction3 = new Transaction(214789L, new BigDecimal(23512.34), "test type", 5187623L);
+        Transaction transaction3 = new Transaction(214789L, new BigDecimal("23512.34"), "test type", 5187623L);
         transactionService.createOrUpdate(transaction3);
 
-        Transaction transaction4 = new Transaction(47256L, new BigDecimal(11.01), "test type2", 5187623L);
+        Transaction transaction4 = new Transaction(47256L, new BigDecimal("11.01"), "test type2", 5187623L);
         transactionService.createOrUpdate(transaction4);
 
         Collection<Long> transactionIds = transactionService.getTransactionIdsByType("test type");
@@ -218,7 +230,7 @@ public class InMemoryTransactionServiceTest {
 
     @Test
     public void testIdsByTypeChangeType() {
-        Transaction transaction = new Transaction(5187623L, new BigDecimal(542.32), "test type", null);
+        Transaction transaction = new Transaction(5187623L, new BigDecimal("542.32"), "test type", null);
         transactionService.createOrUpdate(transaction);
 
         Transaction updatedTransaction = new Transaction(5187623L, new BigDecimal(2342), "test type1", null);

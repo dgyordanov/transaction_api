@@ -110,6 +110,10 @@ public class InMemoryTransactionService implements TransactionService {
         if (transaction.getId().equals(transaction.getParentId())) {
             throw new IllegalArgumentException("Parent could not point to self");
         }
+        if (transaction.getAmount().scale() > 2) {
+            throw new IllegalArgumentException("Amount shouldn't have more then 2 digits after the '.' sign");
+        }
+
     }
 
     private void processOldTransaction(@NotNull Transaction transaction) {
