@@ -30,6 +30,7 @@ Why a HashMap with key ID and value transaction is chosen as a data structure:
 Regarding the request which lists all the transactions IDs which are from a particular type, a new HashMap is used as an index. It has the type as a key and list of IDs as a value. Without this HashMap, we need to go through the all transactions in order to find the result - O(n). With the HashMap, we read the list of ids by key O(1). The price is that we need to edit the HashMap on create/edit which brings complexity and some additional lag.
 
 ## Notes
+* Used data structured are thread safe
 * No security is implemented
 * Transaction amount could be also negative but not 0
 * HTTP PUT method is used for create and update and POST handler is not implemented
