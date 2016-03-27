@@ -12,7 +12,6 @@ import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.boot.test.TestRestTemplate;
 import org.springframework.boot.test.WebIntegrationTest;
 import org.springframework.http.*;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.web.client.RestTemplate;
 
@@ -28,7 +27,6 @@ import static org.junit.Assert.assertThat;
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(TransactionServer.class)
 @WebIntegrationTest
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class TransactionControllerTest {
 
     private static final String BASE_URL = "http://localhost:8080/transactionservice";
@@ -43,11 +41,11 @@ public class TransactionControllerTest {
     public void createTransaction() throws JsonProcessingException {
         HttpEntity<String> httpEntity = getTransactionHttpEntity(BigDecimal.valueOf(5000L), "cars", null);
         ResponseEntity<Map> response =
-                template.exchange(BASE_URL + "/transaction/1", HttpMethod.PUT, httpEntity, Map.class);
+                template.exchange(BASE_URL + "/transaction/72146", HttpMethod.PUT, httpEntity, Map.class);
 
         assertThat(response.getStatusCode(), equalTo(HttpStatus.OK));
 
-        Transaction createdTransaction = transactionService.getById(1L);
+        Transaction createdTransaction = transactionService.getById(72146L);
         assertThat(createdTransaction.getAmount(), equalTo(BigDecimal.valueOf(5000L)));
         assertThat(createdTransaction.getType(), equalTo("cars"));
         assertThat(createdTransaction.getParentId(), is(nullValue()));
@@ -62,16 +60,16 @@ public class TransactionControllerTest {
     public void createTransactionWithoutAmount() throws JsonProcessingException {
         HttpEntity<String> httpEntity = getTransactionHttpEntity(null, "cars", null);
         ResponseEntity<Map> response =
-                template.exchange(BASE_URL + "/transaction/1", HttpMethod.PUT, httpEntity, Map.class);
+                template.exchange(BASE_URL + "/transaction/651941", HttpMethod.PUT, httpEntity, Map.class);
 
         assertThat(response.getStatusCode(), equalTo(HttpStatus.BAD_REQUEST));
     }
 
     @Test
     public void createTransactionInvalidParent() throws JsonProcessingException {
-        HttpEntity<String> httpEntity = getTransactionHttpEntity(BigDecimal.valueOf(5000L), "cars", 2L);
+        HttpEntity<String> httpEntity = getTransactionHttpEntity(BigDecimal.valueOf(5000L), "cars", 9724517L);
         ResponseEntity<Map> response =
-                template.exchange(BASE_URL + "/transaction/1", HttpMethod.PUT, httpEntity, Map.class);
+                template.exchange(BASE_URL + "/transaction/64322908", HttpMethod.PUT, httpEntity, Map.class);
 
         assertThat(response.getStatusCode(), equalTo(HttpStatus.BAD_REQUEST));
     }
@@ -80,11 +78,11 @@ public class TransactionControllerTest {
     public void updateTransaction() throws JsonProcessingException {
         HttpEntity<String> createHttpEntity = getTransactionHttpEntity(BigDecimal.valueOf(5000L), "cars", null);
         ResponseEntity<Map> createResponse =
-                template.exchange(BASE_URL + "/transaction/1", HttpMethod.PUT, createHttpEntity, Map.class);
+                template.exchange(BASE_URL + "/transaction/9871236", HttpMethod.PUT, createHttpEntity, Map.class);
 
         HttpEntity<String> updateHttpEntity = getTransactionHttpEntity(new BigDecimal("11000.14"), "motors", null);
         ResponseEntity<Map> updateResponse =
-                template.exchange(BASE_URL + "/transaction/1", HttpMethod.PUT, updateHttpEntity, Map.class);
+                template.exchange(BASE_URL + "/transaction/9871236", HttpMethod.PUT, updateHttpEntity, Map.class);
 
         assertThat(createResponse.getStatusCode(), equalTo(HttpStatus.OK));
         @SuppressWarnings("unchecked")
@@ -98,7 +96,7 @@ public class TransactionControllerTest {
         assertThat(updateResponseBody.get("status"), equalTo("ok"));
         assertThat(updateResponseBody.size(), equalTo(1));
 
-        Transaction createdTransaction = transactionService.getById(1L);
+        Transaction createdTransaction = transactionService.getById(9871236L);
         assertThat(createdTransaction.getAmount(), equalTo(new BigDecimal("11000.14")));
         assertThat(createdTransaction.getType(), equalTo("motors"));
         assertThat(createdTransaction.getParentId(), is(nullValue()));
@@ -107,9 +105,9 @@ public class TransactionControllerTest {
 
     @Test
     public void testReadById() {
-        transactionService.createOrUpdate(new Transaction(1L, new BigDecimal("33.23"), "test type", null));
+        transactionService.createOrUpdate(new Transaction(791698L, new BigDecimal("33.23"), "test type", null));
 
-        ResponseEntity<Map> response = template.getForEntity(BASE_URL + "/transaction/1", Map.class);
+        ResponseEntity<Map> response = template.getForEntity(BASE_URL + "/transaction/791698", Map.class);
         assertThat(response.getStatusCode(), equalTo(HttpStatus.OK));
 
         @SuppressWarnings("unchecked")
@@ -122,19 +120,19 @@ public class TransactionControllerTest {
 
     @Test
     public void testReadInvalidId() {
-        ResponseEntity<String> response = template.getForEntity(BASE_URL + "/transaction/1", String.class);
-        assertThat(response.getStatusCode(), equalTo(HttpStatus.NOT_FOUND));
+        ResponseEntity<String> response = template.getForEntity(BASE_URL + "/transaction/1312345", String.class);
+        assertThat(response.getStatusCode(), equalTo(HttpStatus.BAD_REQUEST));
     }
 
     @Test
     public void testSum() throws JsonProcessingException {
-        Transaction parentTransaction = new Transaction(1L, new BigDecimal(542.32), "test type", null);
+        Transaction parentTransaction = new Transaction(78912306L, new BigDecimal("542.32"), "test type", null);
         transactionService.createOrUpdate(parentTransaction);
 
-        Transaction childTransaction = new Transaction(2L, new BigDecimal(2342), "test type1", 1L);
+        Transaction childTransaction = new Transaction(98764322L, new BigDecimal(2342), "test type1", 78912306L);
         transactionService.createOrUpdate(childTransaction);
 
-        ResponseEntity<Map> response = template.getForEntity(BASE_URL + "/sum/1", Map.class);
+        ResponseEntity<Map> response = template.getForEntity(BASE_URL + "/sum/78912306", Map.class);
         assertThat(response.getStatusCode(), equalTo(HttpStatus.OK));
         @SuppressWarnings("unchecked")
         Map<String, Object> responseBody = response.getBody();
@@ -145,30 +143,34 @@ public class TransactionControllerTest {
 
     @Test
     public void testSumInvalidId() {
-        ResponseEntity<Map> response = template.getForEntity(BASE_URL + "/sum/1", Map.class);
-        assertThat(response.getStatusCode(), equalTo(HttpStatus.NOT_FOUND));
+        ResponseEntity<Map> response = template.getForEntity(BASE_URL + "/sum/61912", Map.class);
+        assertThat(response.getStatusCode(), equalTo(HttpStatus.BAD_REQUEST));
     }
 
     @Test
     public void testIdListByType() throws JsonProcessingException {
-        Transaction parentTransaction = new Transaction(1L, new BigDecimal(542.32), "type1", null);
+        Transaction parentTransaction = new Transaction(9823174L, new BigDecimal("542.32"), "type1", null);
         transactionService.createOrUpdate(parentTransaction);
 
-        Transaction childTransaction = new Transaction(2L, new BigDecimal(2342), "Stype2", 1L);
+        Transaction childTransaction = new Transaction(981645393L, new BigDecimal(2342), "type2", 9823174L);
         transactionService.createOrUpdate(childTransaction);
 
         ResponseEntity<List> response = template.getForEntity(BASE_URL + "/types/type1", List.class);
         assertThat(response.getStatusCode(), equalTo(HttpStatus.OK));
         @SuppressWarnings("unchecked")
         List<Long> responseBody = response.getBody();
-        assertThat(responseBody, equalTo(Arrays.asList(1)));
+        assertThat(responseBody, equalTo(Arrays.asList(9823174)));
 
     }
 
     @Test
-    public void testIdListByInvalidType() throws JsonProcessingException {
-        ResponseEntity<List> response = template.getForEntity(BASE_URL + "/types/type1", List.class);
-        assertThat(response.getStatusCode(), equalTo(HttpStatus.NOT_FOUND));
+    public void testIdListByNotExistingType() throws JsonProcessingException {
+        ResponseEntity<List> response = template.getForEntity(BASE_URL + "/types/not_existing_type", List.class);
+
+        assertThat(response.getStatusCode(), equalTo(HttpStatus.OK));
+        @SuppressWarnings("unchecked")
+        List<Long> responseBody = response.getBody();
+        assertThat(responseBody.size(), equalTo(0));
     }
 
     private HttpEntity<String> getTransactionHttpEntity(BigDecimal amount, String type, Long parentId)
@@ -185,6 +187,7 @@ public class TransactionControllerTest {
         }
         HttpHeaders requestHeaders = new HttpHeaders();
         requestHeaders.setContentType(MediaType.APPLICATION_JSON);
+        requestHeaders.set("Connection", "Close");
 
         return new HttpEntity<>(OBJECT_MAPPER.writeValueAsString(requestBody), requestHeaders);
     }

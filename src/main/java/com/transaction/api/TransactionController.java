@@ -1,16 +1,19 @@
 package com.transaction.api;
 
+import com.transaction.service.ParentNotFoundException;
 import com.transaction.service.Transaction;
 import com.transaction.service.TransactionService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
@@ -26,10 +29,18 @@ public class TransactionController {
     @Autowired
     private ModelMapper modelMapper;
 
+    private static final Map<String, String> okResponseBody = new HashMap<>();
+
+    static {
+        okResponseBody.put("status", "ok");
+    }
+
     @RequestMapping(value = "/transaction/{transaction_id}", method = PUT, consumes = APPLICATION_JSON_VALUE)
-    public void createOrUpdate(@PathVariable("transaction_id") Long id, @RequestBody TransactionDTO transactionDTO) {
+    public Map<String, String> createOrUpdate(
+            @PathVariable("transaction_id") Long id, @RequestBody TransactionDTO transactionDTO) {
         Transaction transaction = convertToModel(id, transactionDTO);
         transactionService.createOrUpdate(transaction);
+        return okResponseBody;
     }
 
     @RequestMapping(value = "/transaction/{transaction_id}", method = GET, produces = APPLICATION_JSON_VALUE)
@@ -51,6 +62,11 @@ public class TransactionController {
     private TransactionsSumDTO getTransactionsSum(@PathVariable("transaction_id") Long id) {
         BigDecimal sum = transactionService.calculateTransactionsSum(id);
         return new TransactionsSumDTO(sum);
+    }
+
+    @ExceptionHandler({IllegalArgumentException.class, ParentNotFoundException.class})
+    void handleBadRequests(HttpServletResponse response) throws IOException {
+        response.sendError(HttpStatus.BAD_REQUEST.value());
     }
 
     private TransactionDTO convertToDto(Transaction transaction) {
