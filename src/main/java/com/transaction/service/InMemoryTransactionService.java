@@ -67,7 +67,7 @@ public class InMemoryTransactionService implements TransactionService {
     @Override
     public BigDecimal calculateTransactionsSum(@NotNull Long transactionId) {
         if (transactionId == null) {
-            throw new IllegalArgumentException("Transaciton Id is null");
+            throw new IllegalArgumentException("Transaction Id is null");
         }
 
         Transaction transaction = transactionStorage.get(transactionId);
@@ -102,10 +102,13 @@ public class InMemoryTransactionService implements TransactionService {
     private void validateCreateUpdateInput(@NotNull Transaction transaction) {
         Set<ConstraintViolation<Transaction>> errors = validator.validate(transaction);
         if (!errors.isEmpty()) {
-            throw new IllegalArgumentException(String.format("Validation error: %s", errors));
+            throw new IllegalArgumentException(String.format("Validation error(s): %s",
+                    errors.stream()
+                            .map(error -> String.format("%s %s", error.getPropertyPath().toString(), error.getMessage()))
+                            .reduce("", (s1, s2) -> s1 + ";" + s2)));
         }
         if (transaction.getParentId() != null && !transactionStorage.containsKey(transaction.getParentId())) {
-            throw new ParentNotFoundException(String.format("Invalid parentId: %s", transaction.getParentId()));
+            throw new ParentNotFoundException(String.format("Invalid parent id: %s", transaction.getParentId()));
         }
         if (transaction.getId().equals(transaction.getParentId())) {
             throw new IllegalArgumentException("Parent could not point to self");
