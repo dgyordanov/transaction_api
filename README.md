@@ -21,6 +21,7 @@ Transactions are stored in the memory and everything is lost when the process is
 Transactions are in a parent-child relation, so the most natural data structure seems to be a tree. The problem is that there is no order in such a tree. It means that finding a transaction will have O(n). A HashMap was choosen for a data structure where the transactions are stored. Every transaction keeps reference to all its children, so all the children can be found easily in a recursive manner.
 
 Why a HashMap with key ID and value transaction is chosen as a data structure:
+
 |         | Add transaction | Read by ID | Find all children |
 | --------|:---------------:| ----------:| -----------------:|
 | HashMap | O(1)            | O(1)       | O(1)              |
