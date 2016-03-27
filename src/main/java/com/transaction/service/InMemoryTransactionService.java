@@ -107,6 +107,9 @@ public class InMemoryTransactionService implements TransactionService {
         if (transaction.getParentId() != null && !transactionStorage.containsKey(transaction.getParentId())) {
             throw new ParentNotFoundException(String.format("Invalid parentId: %s", transaction.getParentId()));
         }
+        if (transaction.getId().equals(transaction.getParentId())) {
+            throw new IllegalArgumentException("Parent could not point to self");
+        }
     }
 
     private void processOldTransaction(@NotNull Transaction transaction) {

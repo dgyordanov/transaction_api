@@ -92,6 +92,15 @@ public class InMemoryTransactionServiceTest {
         assertThat(storedParentTransaction.getChildren().size(), is(equalTo(1)));
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void testUnableToPointSelfAsParent() {
+        Transaction parentTransaction = new Transaction(23768L, new BigDecimal(542.32), "test type", null);
+        transactionService.createOrUpdate(parentTransaction);
+
+        Transaction childTransaction = new Transaction(23768L, new BigDecimal(198.11), "test type2", 23768L);
+        transactionService.createOrUpdate(childTransaction);
+    }
+
     @Test(expected = ParentNotFoundException.class)
     public void testUnableToCreateWithNotExistingParent() {
         Transaction transaction = new Transaction(2345287L, new BigDecimal(22.35), "test type", 67593458L);
