@@ -105,8 +105,8 @@ public class InMemoryTransactionService implements TransactionService {
         if (!errors.isEmpty()) {
             throw new IllegalArgumentException(String.format("Validation error(s): %s",
                     errors.stream()
-                            .map(error -> String.format("%s %s", error.getPropertyPath().toString(), error.getMessage()))
-                            .reduce("", (s1, s2) -> s1 + ";" + s2)));
+                            .map(error -> String.format("'%s' %s", error.getPropertyPath().toString(), error.getMessage()))
+                            .reduce("", (s1, s2) -> s1 + s2 + ";")));
         }
         if (transaction.getParentId() != null && !transactionStorage.containsKey(transaction.getParentId())) {
             throw new ParentNotFoundException(String.format("Invalid parent id: %s", transaction.getParentId()));
